@@ -30,6 +30,8 @@ func TestResponseDiagnosticsExcludeServerContent(t *testing.T) {
 			{"invalid envelope", `{"id":1,"error":{"code":` + diagnosticNumber + `}}`, "JSON-RPC response", false},
 			{"invalid result", `{"id":1,"result":{"isError":` + diagnosticNumber + `}}`, "result: invalid response", false},
 			{"tool error", `{"id":1,"result":{"isError":true,"content":[{"type":"text","text":"` + diagnosticCanary + `"}]}}`, "tools/call reported an error", false},
+			{"channel not found", `{"id":1,"result":{"isError":true,"content":[{"type":"text","text":"execution_failed: channel_not_found ` + diagnosticCanary + `"}]}}`, "tools/call reported an error: channel_not_found", false},
+			{"not in channel", `{"id":1,"result":{"isError":true,"content":[{"type":"text","text":"execution_failed: not_in_channel ` + diagnosticCanary + `"}]}}`, "tools/call reported an error: not_in_channel", false},
 			{"empty tool error", `{"id":1,"result":{"isError":true}}`, "tools/call reported an error", false},
 			{"empty tool result", `{"id":1,"result":{"content":[]}}`, "tools/call returned no text content", false},
 			{"repeated cursor", `{"id":1,"result":{"tools":[],"nextCursor":"` + diagnosticCanary + `"}}`, "tools/list repeated cursor", true},

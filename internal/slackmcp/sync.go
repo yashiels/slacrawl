@@ -16,6 +16,7 @@ import (
 
 	"github.com/openclaw/slacrawl/internal/admission"
 	"github.com/openclaw/slacrawl/internal/config"
+	"github.com/openclaw/slacrawl/internal/mcpclient"
 	"github.com/openclaw/slacrawl/internal/search"
 	"github.com/openclaw/slacrawl/internal/store"
 )
@@ -129,6 +130,14 @@ func Sync(ctx context.Context, st *store.Store, opts Options) (Summary, error) {
 			return summary, store.ErrMCPHistorySuperseded
 		}
 		if err != nil {
+			if errors.Is(err, mcpclient.ErrChannelUnavailable) {
+				logger := opts.Logger
+				if logger == nil {
+					logger = slog.Default()
+				}
+				logger.Warn("Skipping inaccessible MCP channel", "workspace", workspaceID, "channel", channel.ID, "error", err)
+				continue
+			}
 			var limit *pageLimitError
 			if errors.As(err, &limit) {
 				// Retrying the same bounded prefix cannot establish history coverage;

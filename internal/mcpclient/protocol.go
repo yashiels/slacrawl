@@ -3,8 +3,13 @@ package mcpclient
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 )
+
+var ErrChannelUnavailable = errors.New("MCP channel is inaccessible")
+
+var channelUnavailableRE = regexp.MustCompile(`\b(channel_not_found|not_in_channel)\b`)
 
 type rpcCall func(context.Context, string, any, any) error
 
@@ -42,6 +47,14 @@ func callToolText(ctx context.Context, call rpcCall, name string, arguments map[
 		return "", err
 	}
 	if result.IsError {
+		for _, item := range result.Content {
+			if item.Type != "" && item.Type != "text" {
+				continue
+			}
+			if code := channelUnavailableRE.FindString(item.Text); code != "" {
+				return "", &diagnosticError{message: "MCP tools/call reported an error: " + code, cause: ErrChannelUnavailable}
+			}
+		}
 		return "", errors.New("MCP tools/call reported an error")
 	}
 	parts := make([]string, 0, len(result.Content))
