@@ -153,7 +153,7 @@ func Ingest(ctx context.Context, st *store.Store, sourcePath string, opts Ingest
 			ThreadTS:       draft.Destinations[0].ThreadTS,
 			Text:           draftText(draft),
 			NormalizedText: strings.TrimSpace(draftText(draft)),
-			SourceRank:     3,
+			SourceRank:     4,
 			SourceName:     draftSourceName,
 			RawJSON:        store.MarshalRaw(draft),
 			UpdatedAt:      now,

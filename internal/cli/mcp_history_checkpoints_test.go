@@ -88,7 +88,7 @@ func TestMCPHistoryCheckpointsFromCLI(t *testing.T) {
 			}
 			sliced := tc.name == "since" || tc.name == "full-since"
 			if sliced {
-				seedMessage(mcpHistoryOld, "mcp", 4, 1)
+				seedMessage(mcpHistoryOld, "mcp", 3, 1)
 				seedState("thread_pending_v1", retainedCLIKey("TLOCAL", "CONE", mcpHistoryOld), "seed-thread-generation")
 				pending := "1709990000.000000"
 				progress, err := json.Marshal(mcpHistoryProgress{Complete: true, Latest: mcpHistoryRoot, Pending: &pending, Revision: "seed-history-revision"})
@@ -100,7 +100,7 @@ func TestMCPHistoryCheckpointsFromCLI(t *testing.T) {
 				seedMessage("1710040000.000000", "desktop", 3, 0)
 			}
 			if tc.name == "native-incomplete-retry" {
-				seedMessage(mcpHistoryRoot, "mcp", 4, 0)
+				seedMessage(mcpHistoryRoot, "mcp", 3, 0)
 				progress, err := json.Marshal(mcpHistoryProgress{Complete: true, Latest: mcpHistoryRoot, Revision: "seed-history-revision"})
 				require.NoError(t, err)
 				seedState("history_work_v1", mcpHistoryKey("CONE", adapter, ""), string(progress))
@@ -245,8 +245,8 @@ func TestMCPHistoryCheckpointsFromCLI(t *testing.T) {
 			case "reply-newer-than-history":
 				progress(0, "CONE", true, mcpHistoryRoot, nil)
 				progress(1, "CONE", true, mcpHistoryGap, nil)
-				check(hasMessage(0, mcpHistoryReply, mcpHistoryRoot, "mcp", 4), "newer reply missing")
-				check(hasMessage(1, mcpHistoryGap, "", "mcp", 4), "history gap skipped after newer reply")
+				check(hasMessage(0, mcpHistoryReply, mcpHistoryRoot, "mcp", 3), "newer reply missing")
+				check(hasMessage(1, mcpHistoryGap, "", "mcp", 3), "history gap skipped after newer reply")
 			case "completed-empty-history":
 				progress(0, "CONE", true, "", nil)
 				progress(1, "CONE", true, mcpHistoryRoot, nil)
@@ -255,16 +255,16 @@ func TestMCPHistoryCheckpointsFromCLI(t *testing.T) {
 			case "later-channel-failure":
 				progress(0, "CONE", true, mcpHistoryRoot, nil)
 				progress(0, "CTWO", false, "", new(""))
-				check(hasMessage(0, mcpHistoryRoot, "", "mcp", 4), "first channel commit lost")
+				check(hasMessage(0, mcpHistoryRoot, "", "mcp", 3), "first channel commit lost")
 			case "native-incomplete-retry":
 				first := progress(0, "CONE", true, mcpHistoryRoot, new("1709996400.000000"))
 				second := progress(1, "CONE", true, mcpHistoryReply, nil)
 				check(first.Revision != "seed-history-revision" && first.Revision != second.Revision, "retry did not acquire a fresh history revision")
-				check(hasMessage(0, mcpHistoryReply, "", "mcp", 4), "valid incomplete page lost")
-				check(hasMessage(1, mcpHistoryGap, "", "mcp", 4), "pending interval gap skipped")
+				check(hasMessage(0, mcpHistoryReply, "", "mcp", 3), "valid incomplete page lost")
+				check(hasMessage(1, mcpHistoryGap, "", "mcp", 3), "pending interval gap skipped")
 			case "other-source-maximum":
 				progress(0, "CONE", true, mcpHistoryRoot, nil)
-				check(hasMessage(0, mcpHistoryRoot, "", "mcp", 4), "foreign-source maximum hid MCP history")
+				check(hasMessage(0, mcpHistoryRoot, "", "mcp", 3), "foreign-source maximum hid MCP history")
 				check(hasMessage(0, "1710030000.000000", "", "api-user", 1) && hasMessage(0, "1710040000.000000", "", "desktop", 3), "other-source rows changed")
 			case "text-bootstrap":
 				first := progress(0, "CONE", false, "", new(""))
@@ -276,7 +276,7 @@ func TestMCPHistoryCheckpointsFromCLI(t *testing.T) {
 				for i := 2; i < 4; i++ {
 					progress(i, "CONE", true, mcpHistoryNew, nil)
 					for _, ts := range []string{mcpHistoryRoot, mcpHistoryGap, mcpHistoryNew} {
-						check(hasMessage(i, ts, "", "mcp", 4), "bootstrap lost a history page")
+						check(hasMessage(i, ts, "", "mcp", 3), "bootstrap lost a history page")
 					}
 					check(len(attempts[i].Messages) == 5, "bootstrap or incremental retry duplicated history")
 				}
@@ -288,13 +288,13 @@ func TestMCPHistoryCheckpointsFromCLI(t *testing.T) {
 					}
 					check(reflect.DeepEqual(mcpHistoryStateRows(beforeState, kind, key), mcpHistoryStateRows(attempts[0].State, kind, key)), "sliced sync changed ordinary "+kind)
 				}
-				check(hasMessage(0, "1710020002.000000", mcpHistoryNew, "mcp", 4), "sliced current replies missing")
-				check(!hasMessage(0, "1709900001.000000", mcpHistoryOld, "mcp", 4), "sliced sync visited old thread")
+				check(hasMessage(0, "1710020002.000000", mcpHistoryNew, "mcp", 3), "sliced current replies missing")
+				check(!hasMessage(0, "1709900001.000000", mcpHistoryOld, "mcp", 3), "sliced sync visited old thread")
 			case "full-then-retention":
 				check(reflect.DeepEqual(purged, []int64{0, 1}), "retention setup or purge")
-				check(hasMessage(0, mcpHistoryOld, "", "mcp", 4), "Full did not restore older history")
-				check(!hasMessage(1, mcpHistoryOld, "", "mcp", 4), "ordinary retry inherited Full authority")
-				check(hasMessage(1, "1710000100.000000", "", "mcp", 4), "retained history missing")
+				check(hasMessage(0, mcpHistoryOld, "", "mcp", 3), "Full did not restore older history")
+				check(!hasMessage(1, mcpHistoryOld, "", "mcp", 3), "ordinary retry inherited Full authority")
+				check(hasMessage(1, "1710000100.000000", "", "mcp", 3), "retained history missing")
 			}
 			if len(failures) > 0 {
 				t.Fatalf("MCP history checkpoint boundary: %s", strings.Join(failures, "; "))
@@ -331,7 +331,7 @@ func TestMCPNativeCollectionRetryFromCLI(t *testing.T) {
 					for _, channel := range []string{"CONE", "CTWO"} {
 						require.NoError(t, st.EnsureChannel(ctx, store.Channel{ID: channel, WorkspaceID: "TLOCAL", Name: "collection fixture", Kind: "public_channel", RawJSON: "{}", UpdatedAt: seedTime}))
 					}
-					require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "CTWO", TS: mcpHistoryRoot, Text: "retained root", NormalizedText: "retained root", ReplyCount: 1, SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: seedTime}, nil))
+					require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "CTWO", TS: mcpHistoryRoot, Text: "retained root", NormalizedText: "retained root", ReplyCount: 1, SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: seedTime}, nil))
 					progress, err := json.Marshal(mcpHistoryProgress{Complete: true, Latest: mcpHistoryOld, Revision: "seed-history-revision"})
 					require.NoError(t, err)
 					for _, state := range [][3]string{

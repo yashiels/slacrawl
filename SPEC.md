@@ -44,7 +44,7 @@ Out of scope for V1:
 - language: Go
 - schema: single-workspace default, multi-workspace-ready
 - search: FTS5 first, embeddings later
-- source precedence: user-token API, then bot-token API and slack-export imports, then desktop-local cache; external providers must use a numeric rank greater than `2`, and equal ranks may replace
+- source precedence: user-token API, then bot-token API and slack-export imports, then MCP, then desktop-local cache; external providers must use a numeric rank greater than `2`, and equal ranks may replace
 - files: metadata in SQLite, opt-in blob downloads in the local cache
 - Git sharing includes eligible cached public-channel media in its raw cache layout; a future compressed-media format must retain raw-media import compatibility
 - desktop-local source: supported Slack Desktop cache paths on macOS and Linux

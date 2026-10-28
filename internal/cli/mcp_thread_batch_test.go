@@ -51,7 +51,7 @@ func TestMCPHistoryBatchKeepsChildWorkFromCLI(t *testing.T) {
 				if text {
 					// Text history has no ThreadTS. An arriving root can instead
 					// make a previously archived orphan child eligible evidence.
-					require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkChild, ThreadTS: mcpWorkRoot, Text: "archivedchild", NormalizedText: "archivedchild", SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: now}, nil))
+					require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkChild, ThreadTS: mcpWorkRoot, Text: "archivedchild", NormalizedText: "archivedchild", SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: now}, nil))
 				}
 				_, err = st.DB().ExecContext(ctx, "insert into sync_state(source_name,entity_type,entity_id,value,updated_at) values(?,?,?,?,?)", "mcp", "workspace", "TLOCAL", "2020-01-01T00:00:00Z", "2020-01-01T00:00:00Z")
 				require.NoError(t, err)
@@ -159,7 +159,7 @@ func TestMCPHistoryBatchKeepsChildWorkFromCLI(t *testing.T) {
 					for _, row := range observed.Rows {
 						require.NotEqual(t, failedTS, row["ts"])
 						require.Equal(t, "mcp", row["source_name"])
-						require.Equal(t, int64(4), row["source_rank"])
+						require.Equal(t, int64(3), row["source_rank"])
 						require.Equal(t, int64(0), row["reply_count"])
 					}
 				}

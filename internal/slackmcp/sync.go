@@ -23,7 +23,7 @@ import (
 
 const (
 	SourceName          = "mcp"
-	SourceRank          = 4
+	SourceRank          = 3
 	maxMessageBatchSize = 500
 )
 

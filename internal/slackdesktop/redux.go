@@ -262,7 +262,7 @@ func ingestPreparedReduxStates(ctx context.Context, st *store.Store, states []pr
 					ReplyCount:     message.ReplyCount,
 					LatestReply:    message.LatestReply,
 					EditedTS:       editedTS(message),
-					SourceRank:     3,
+					SourceRank:     4,
 					SourceName:     indexedDBSourceName,
 					RawJSON:        store.MarshalRaw(message),
 					UpdatedAt:      now,

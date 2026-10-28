@@ -16,7 +16,7 @@ func TestReturnedThreadRootsUseFinalScopedEvidence(t *testing.T) {
 			now := time.Unix(1710000000, 0).UTC()
 			seedBatchCatalog(t, st, "T1", "C1", "U1", now)
 			root := batchMessage("C1", "1710000001.000000", "T1", "root", now)
-			root.SourceName, root.SourceRank = "mcp", 4
+			root.SourceName, root.SourceRank = "mcp", 3
 			child := root
 			child.TS, child.ThreadTS, child.Text = "1710000002.000000", root.TS, "child"
 			writes := []MessageWrite{{Message: root}, {Message: child}}

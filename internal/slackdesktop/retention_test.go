@@ -147,8 +147,8 @@ func TestReduxRetentionAllowsExistingRowsByPriority(t *testing.T) {
 		rank   int
 	}{
 		{"api-user", 1},
-		{"desktop-indexeddb", 3},
-		{"mcp", 4},
+		{"desktop-indexeddb", 4},
+		{"mcp", 3},
 	} {
 		t.Run(tc.source, func(t *testing.T) {
 			ctx := context.Background()
@@ -170,10 +170,10 @@ func TestReduxRetentionAllowsExistingRowsByPriority(t *testing.T) {
 			requireNoDesktopCanary(t, st, "expired-neighbor", "expired-new-reply", "UEXPIRED")
 			rows, err := st.QueryReadOnly(ctx, "select ts,text,source_name,source_rank from messages")
 			require.NoError(t, err)
-			wantText, wantSource, wantRank := "desktop-update <@UCURRENT>", indexedDBSourceName, int64(3)
-			if tc.rank < 3 {
+			wantText, wantSource, wantRank := "desktop-update <@UCURRENT>", indexedDBSourceName, int64(4)
+			if tc.rank < 4 {
 				wantText, wantSource, wantRank = original.Text, tc.source, int64(tc.rank)
-				require.Equal(t, before, reduxRetentionMessageSnapshot(t, st), "API row and derived data stay byte-equivalent")
+				require.Equal(t, before, reduxRetentionMessageSnapshot(t, st), "Higher-priority row and derived data stay byte-equivalent")
 			}
 			require.Equal(t, []map[string]any{{"ts": original.TS, "text": wantText, "source_name": wantSource, "source_rank": wantRank}}, rows)
 		})

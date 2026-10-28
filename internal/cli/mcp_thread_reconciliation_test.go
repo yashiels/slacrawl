@@ -31,7 +31,7 @@ func TestMCPSlicedReturnedRootEvidenceFromCLI(t *testing.T) {
 				require.NoError(t, err)
 				now := time.Unix(1700000000, 0).UTC()
 				mcpReconcileCatalog(t, st, now)
-				old := store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot, Text: "old retained root", NormalizedText: "old retained root", ReplyCount: 1, SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: now}
+				old := store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot, Text: "old retained root", NormalizedText: "old retained root", ReplyCount: 1, SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: now}
 				require.NoError(t, st.UpsertMessage(ctx, old, nil))
 				_, err = st.PrepareThreadWork(ctx, "mcp", "TLOCAL", "C123", nil)
 				require.NoError(t, err)
@@ -55,7 +55,7 @@ func TestMCPSlicedReturnedRootEvidenceFromCLI(t *testing.T) {
 					}
 					fixture.messages = append(fixture.messages, last)
 				case "retained-child", "priority-child":
-					retained := store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkNewChild, ThreadTS: mcpWorkNewRoot, Text: "retained child", NormalizedText: "retained child", SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: now}
+					retained := store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkNewChild, ThreadTS: mcpWorkNewRoot, Text: "retained child", NormalizedText: "retained child", SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: now}
 					if mode == "priority-child" {
 						retained.ThreadTS, retained.SourceName, retained.SourceRank = "", "api-user", 1
 					}
@@ -93,7 +93,7 @@ func TestMCPSlicedReturnedRootEvidenceFromCLI(t *testing.T) {
 				require.Equal(t, beforeRoot, apiKeyRows(t, st, "select * from messages where ts='"+mcpWorkRoot+"'"))
 				replies := apiKeyRows(t, st, "select coalesce(thread_ts,'') as thread_ts,source_name,source_rank from messages where ts='1710001003.000000'")
 				if len(want) == 3 {
-					require.Equal(t, []map[string]any{{"thread_ts": mcpWorkNewRoot, "source_name": "mcp", "source_rank": int64(4)}}, replies)
+					require.Equal(t, []map[string]any{{"thread_ts": mcpWorkNewRoot, "source_name": "mcp", "source_rank": int64(3)}}, replies)
 				} else {
 					require.Empty(t, replies)
 				}
@@ -123,7 +123,7 @@ func TestMCPSlicedRepliesOwnSelectedJobsFromCLI(t *testing.T) {
 					now := time.Unix(1700000000, 0).UTC()
 					mcpReconcileCatalog(t, st, now)
 					for _, ts := range []string{mcpWorkRoot, mcpWorkNewRoot} {
-						require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: ts, Text: "retained", NormalizedText: "retained", ReplyCount: 1, SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: now}, nil))
+						require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: ts, Text: "retained", NormalizedText: "retained", ReplyCount: 1, SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: now}, nil))
 					}
 					_, err = st.ApplyWriteBatch(ctx, store.WriteBatch{PendingThreads: []store.ThreadWork{
 						{SourceName: "mcp", WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot},
@@ -256,7 +256,7 @@ func TestMCPNoToolReconcilesMergedTombstonesFromCLI(t *testing.T) {
 				require.NoError(t, err)
 				now := time.Unix(1700000000, 0).UTC()
 				mcpReconcileCatalog(t, st, now)
-				root := store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot, Text: "root", NormalizedText: "root", ReplyCount: 1, SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: now}
+				root := store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot, Text: "root", NormalizedText: "root", ReplyCount: 1, SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: now}
 				require.NoError(t, st.UpsertMessage(ctx, root, nil))
 				require.NoError(t, st.SetSyncState(ctx, "mcp", "workspace", "TLOCAL", "2020-01-01T00:00:00Z"))
 				if mode != "fresh" {

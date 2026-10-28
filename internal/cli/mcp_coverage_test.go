@@ -182,7 +182,7 @@ func TestMCPNativeCoverageAcrossCLIPaths(t *testing.T) {
 					// Capture every observation before the baseline's one policy failure.
 					t.Logf("coverage observation: error=%t freshness_changed=%t completed=%t messages=%d events=%d heads=%d cursor_leaked=%t", runErr != nil, stateChanged, completed, len(rows), counts["message_events"], counts["message_event_heads"], cursorLeaked)
 					require.Empty(t, observedServerErrors)
-					require.Equal(t, []string{"CFIRST|1710000000.000001|coveragealpha|mcp|4", "CFIRST|1710000001.000002|coveragebeta|mcp|4", "CFIRST|1710000010.000003|coveragegamma|mcp|4", "CFIRST|1710000011.000004|coveragedelta|mcp|4", "CSECOND|1710000020.000005|coverageepsilon|mcp|4"}, records)
+					require.Equal(t, []string{"CFIRST|1710000000.000001|coveragealpha|mcp|3", "CFIRST|1710000001.000002|coveragebeta|mcp|3", "CFIRST|1710000010.000003|coveragegamma|mcp|3", "CFIRST|1710000011.000004|coveragedelta|mcp|3", "CSECOND|1710000020.000005|coverageepsilon|mcp|3"}, records)
 					require.Equal(t, 5, counts["message_events"])
 					require.Equal(t, 5, counts["message_event_heads"])
 					require.Equal(t, 5, counts["message_fts"])

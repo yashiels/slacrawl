@@ -75,7 +75,7 @@ func TestMCPRetainedThreadsFromCLI(t *testing.T) {
 					if mode == "native-cursor" || mode == "native-limited" || mode == "text-restart" {
 						hints = 0 // These jobs must come from the duplicate history page.
 					}
-					require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot, Text: "mcproot", NormalizedText: "mcproot", ReplyCount: hints, SourceName: "mcp", SourceRank: 4, RawJSON: "{}", UpdatedAt: now}, nil))
+					require.NoError(t, st.UpsertMessage(ctx, store.Message{WorkspaceID: "TLOCAL", ChannelID: "C123", TS: mcpWorkRoot, Text: "mcproot", NormalizedText: "mcproot", ReplyCount: hints, SourceName: "mcp", SourceRank: 3, RawJSON: "{}", UpdatedAt: now}, nil))
 				}
 				_, err = st.DB().ExecContext(ctx, "insert into sync_state(source_name,entity_type,entity_id,value,updated_at) values(?,?,?,?,?)", "mcp", "workspace", "TLOCAL", "2020-01-01T00:00:00Z", "2020-01-01T00:00:00Z")
 				require.NoError(t, err)
@@ -187,7 +187,7 @@ func TestMCPRetainedThreadsFromCLI(t *testing.T) {
 					require.Equal(t, len(observed.Rows), observed.Counts["message_event_heads"])
 					for _, row := range observed.Rows {
 						require.Equal(t, "mcp", row["source_name"])
-						require.Equal(t, int64(4), row["source_rank"])
+						require.Equal(t, int64(3), row["source_rank"])
 					}
 				}
 				st, err = store.OpenReadOnly(cfg.DBPath)
@@ -209,7 +209,7 @@ func TestMCPRetainedThreadsFromCLI(t *testing.T) {
 					if sliced {
 						root, child, token, mention = mcpWorkNewRoot, mcpWorkNewChild, "mcpnewreply", "UNEW"
 					}
-					require.Equal(t, []map[string]any{{"workspace_id": "TLOCAL", "channel_id": "C123", "ts": child, "thread_ts": root, "source_name": "mcp", "source_rank": int64(4)}}, apiKeyRows(t, st, "select workspace_id,channel_id,ts,thread_ts,source_name,source_rank from messages where ts='"+child+"'"))
+					require.Equal(t, []map[string]any{{"workspace_id": "TLOCAL", "channel_id": "C123", "ts": child, "thread_ts": root, "source_name": "mcp", "source_rank": int64(3)}}, apiKeyRows(t, st, "select workspace_id,channel_id,ts,thread_ts,source_name,source_rank from messages where ts='"+child+"'"))
 					require.Len(t, apiKeyRows(t, st, "select message_key from message_fts where message_fts match '"+token+"'"), 1)
 					require.Equal(t, []map[string]any{{"target_id": mention}}, apiKeyRows(t, st, "select target_id from message_mentions where ts='"+child+"'"))
 					raw := apiKeyRows(t, st, "select raw_json from messages where ts='"+child+"'")

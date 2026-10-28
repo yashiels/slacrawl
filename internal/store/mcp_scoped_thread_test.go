@@ -20,7 +20,7 @@ func TestMCPReturnedThreadWorkAcquiresOnlySelectedRoots(t *testing.T) {
 			var roots []Message
 			for i := 1; i <= 3; i++ {
 				root := batchMessage("C1", fmt.Sprintf("171000000%d.000000", i), "T1", "root", now)
-				root.SourceName, root.SourceRank = "mcp", 4
+				root.SourceName, root.SourceRank = "mcp", 3
 				if i == 1 {
 					root.ReplyCount = 1
 				}
@@ -131,7 +131,7 @@ func TestMCPReturnedThreadWorkSharesReplyGeneration(t *testing.T) {
 				now := time.Unix(1710000000, 0).UTC()
 				seedBatchCatalog(t, st, "T1", "C1", "U1", now)
 				root := batchMessage("C1", "1710000001.000000", "T1", "original", now)
-				root.SourceName, root.SourceRank, root.ReplyCount = "mcp", 4, 1
+				root.SourceName, root.SourceRank, root.ReplyCount = "mcp", 3, 1
 				require.NoError(t, st.UpsertMessage(ctx, root, nil))
 				scope := MCPHistoryScope{WorkspaceID: "T1", ChannelID: "C1", Adapter: "reference", Since: "100"}
 				history := beginHistoryTest(t, st, scope, MCPHistoryOptions{})

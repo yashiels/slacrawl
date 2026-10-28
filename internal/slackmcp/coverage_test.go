@@ -352,7 +352,7 @@ func assertCoverageRows(t *testing.T, st *store.Store, texts []string) {
 	for _, row := range rows {
 		got = append(got, fmt.Sprint(row["text"]))
 		require.Equal(t, "mcp", row["source_name"])
-		require.EqualValues(t, 4, row["source_rank"])
+		require.EqualValues(t, 3, row["source_rank"])
 	}
 	require.Equal(t, texts, got)
 	for _, table := range []string{"message_events", "message_event_heads", "message_fts"} {

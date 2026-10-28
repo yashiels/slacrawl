@@ -19,7 +19,7 @@ func TestMCPHistoryGuardsAllWrites(t *testing.T) {
 				now := time.Unix(1710000000, 0).UTC()
 				seedBatchCatalog(t, st, "T1", "C1", "U1", now)
 				root := batchMessage("C1", "1710000001.000000", "T1", "original", now)
-				root.SourceName, root.SourceRank, root.ReplyCount = "mcp", 4, 1
+				root.SourceName, root.SourceRank, root.ReplyCount = "mcp", 3, 1
 				require.NoError(t, st.UpsertMessage(ctx, root, nil))
 				queued, err := st.ApplyWriteBatch(ctx, WriteBatch{PendingThreads: []ThreadWork{{SourceName: "mcp", WorkspaceID: "T1", ChannelID: "C1", TS: root.TS}}})
 				require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestMCPHistoryFencesRemainingBatches(t *testing.T) {
 			batch := WriteBatch{MCPHistoryGuard: &work, ThreadDiscovery: &ThreadWorkDiscovery{SourceName: "mcp", WorkspaceID: "T1", ChannelID: "C1"}}
 			for i := 0; i < 500; i++ {
 				message := batchMessage("C1", fmt.Sprintf("171000%04d.000000", i), "T1", "committed", now)
-				message.SourceName, message.SourceRank = "mcp", 4
+				message.SourceName, message.SourceRank = "mcp", 3
 				if i == 0 {
 					message.ReplyCount = 1
 				}

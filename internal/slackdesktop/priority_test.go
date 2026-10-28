@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/openclaw/slacrawl/internal/slackmcp"
 	"github.com/openclaw/slacrawl/internal/store"
 	"github.com/stretchr/testify/require"
 )
@@ -55,4 +56,55 @@ func TestReduxPreservesHigherPriorityMessage(t *testing.T) {
 	require.NoError(t, st.UpsertMessage(ctx, api, nil))
 	require.NoError(t, st.DB().QueryRowContext(ctx, `select text from messages where channel_id = ? and ts = ?`, api.ChannelID, api.TS).Scan(&text))
 	require.Equal(t, api.Text, text)
+}
+
+func TestMCPReplacesDesktopWithoutDowngrade(t *testing.T) {
+	for _, api := range []struct {
+		source string
+		rank   int
+	}{
+		{"api-user", 1},
+		{"api-bot", 2},
+	} {
+		t.Run(api.source, func(t *testing.T) {
+			ctx := context.Background()
+			st := admissionStore(t)
+			now := time.Now().UTC()
+			message := store.Message{
+				WorkspaceID: "T1", ChannelID: "C1", TS: "1793168825.038509",
+				Text: "cached", NormalizedText: "cached", SourceName: indexedDBSourceName,
+				SourceRank: 3, RawJSON: "{}", UpdatedAt: now,
+			}
+			require.NoError(t, st.UpsertMessage(ctx, message, nil))
+			message.SourceName, message.SourceRank = slackmcp.SourceName, slackmcp.SourceRank
+			message.Text, message.NormalizedText = "MCP parent", "MCP parent"
+			message.ReplyCount, message.LatestReply = 11, "1793168925.038509"
+			written, err := st.UpsertMessageByPriority(ctx, message, nil)
+			require.NoError(t, err)
+			require.True(t, written)
+			want := []map[string]any{{"text": "MCP parent", "reply_count": int64(11), "latest_reply": "1793168925.038509", "source_name": "mcp"}}
+			query := "select text,reply_count,latest_reply,source_name from messages where ts='1793168825.038509'"
+			rows, err := st.QueryReadOnly(ctx, query)
+			require.NoError(t, err)
+			require.Equal(t, want, rows)
+			state := retentionReduxState("T1", "C1", []ReduxMessage{{TS: message.TS, Text: "stale cache"}})
+			require.NoError(t, ingestReduxStates(ctx, st, []ReduxDecodedState{state}, now.Add(time.Hour), ingestFilter{}))
+			rows, err = st.QueryReadOnly(ctx, query)
+			require.NoError(t, err)
+			require.Equal(t, want, rows)
+			apiMessage := message
+			apiMessage.SourceName, apiMessage.SourceRank = api.source, api.rank
+			apiMessage.Text, apiMessage.NormalizedText = "API parent", "API parent"
+			apiMessage.ReplyCount, apiMessage.LatestReply = 12, "1793169025.038509"
+			written, err = st.UpsertMessageByPriority(ctx, apiMessage, nil)
+			require.NoError(t, err)
+			require.True(t, written)
+			written, err = st.UpsertMessageByPriority(ctx, message, nil)
+			require.NoError(t, err)
+			require.False(t, written)
+			rows, err = st.QueryReadOnly(ctx, query)
+			require.NoError(t, err)
+			require.Equal(t, []map[string]any{{"text": "API parent", "reply_count": int64(12), "latest_reply": "1793169025.038509", "source_name": api.source}}, rows)
+		})
+	}
 }
