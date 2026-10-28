@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -261,14 +262,21 @@ func (c *Client) channelMessages(ctx context.Context, tools toolset, workspaceID
 		return c.referenceChannelMessages(ctx, tools, workspaceID, channelID, oldest, current)
 	}
 	var result channelPage
+	latest := ""
+	var latestValue float64
 	err := walkPages(c.maxPages, func(cursor string) (string, error) {
-		raw, revoked, err := c.callMessages(ctx, tools.readChannel, map[string]any{
+		args := map[string]any{
 			"channel_id":      channelID,
 			"cursor":          cursor,
 			"oldest":          emptyToNil(oldest),
 			"limit":           c.pageSize,
 			"response_format": "detailed",
-		}, current)
+		}
+		if oldest != "" {
+			delete(args, "cursor")
+			args["latest"] = emptyToNil(latest)
+		}
+		raw, revoked, err := c.callMessages(ctx, tools.readChannel, args, current)
 		if revoked {
 			result = channelPage{revoked: true}
 			return "", nil
@@ -283,11 +291,20 @@ func (c *Client) channelMessages(ctx context.Context, tools toolset, workspaceID
 		if next.ChannelID != channelID {
 			return "", errors.New("MCP channel response does not match requested conversation")
 		}
+		pageOldest := ""
+		var pageOldestValue float64
 		for _, message := range next.Messages {
 			result.LatestTS, err = store.MaxMCPHistoryTS(result.LatestTS, message.TS)
 			if err != nil {
 				return "", err
 			}
+			value, _ := strconv.ParseFloat(message.TS, 64)
+			if pageOldest == "" || value < pageOldestValue {
+				pageOldest, pageOldestValue = message.TS, value
+			}
+		}
+		if oldest != "" && (pageOldest == "" || latest != "" && pageOldestValue >= latestValue) {
+			return "", nil
 		}
 		if result.ChannelID == "" {
 			result.ChannelID = next.ChannelID
@@ -295,6 +312,10 @@ func (c *Client) channelMessages(ctx context.Context, tools toolset, workspaceID
 		}
 		result.Messages = append(result.Messages, next.Messages...)
 		result.NextCursor = next.NextCursor
+		if oldest != "" && next.NextCursor != "" {
+			latest, latestValue = pageOldest, pageOldestValue
+			return latest, nil
+		}
 		return next.NextCursor, nil
 	})
 	return result, err

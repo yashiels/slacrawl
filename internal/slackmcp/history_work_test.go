@@ -22,7 +22,7 @@ func TestMCPHistoryValidatesRawTimestampsBeforeFiltering(t *testing.T) {
 				client := &Client{pageSize: 100, maxPages: 2, mcp: threadWorkSession(func(_ context.Context, _ string, args map[string]any) (string, error) {
 					calls++
 					payload := map[string]any{"messages": "Channel: one (CONE)\n\n=== Message from User (UONE) at 2024-03-09T16:00:00Z === \nMessage TS: " + ts + "\n" + admissionCanary}
-					expected := map[string]any{"channel_id": "CONE", "cursor": "", "oldest": "1710000000.000000", "limit": 100, "response_format": "detailed"}
+					expected := map[string]any{"channel_id": "CONE", "latest": nil, "oldest": "1710000000.000000", "limit": 100, "response_format": "detailed"}
 					if provider == providerReference {
 						payload = map[string]any{"ok": true, "messages": []map[string]any{{"ts": ts, "text": admissionCanary}}}
 						expected = map[string]any{"channel_id": "CONE", "limit": 100}

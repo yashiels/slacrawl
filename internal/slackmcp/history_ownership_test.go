@@ -23,7 +23,7 @@ func TestMCPHistoryCallChecksOwnership(t *testing.T) {
 				client := &Client{pageSize: 100, maxPages: 2, mcp: threadWorkSession(func(_ context.Context, tool string, args map[string]any) (string, error) {
 					calls++
 					require.Equal(t, "history", tool)
-					expected := map[string]any{"channel_id": "C123", "cursor": "", "oldest": "100", "limit": 100, "response_format": "detailed"}
+					expected := map[string]any{"channel_id": "C123", "latest": nil, "oldest": "100", "limit": 100, "response_format": "detailed"}
 					if provider == providerReference {
 						expected = map[string]any{"channel_id": "C123", "limit": 100}
 					}
