@@ -327,6 +327,28 @@ func splitMessageBodyAndMetadata(raw string) (string, messageMetadata) {
 	lines := strings.Split(raw, "\n")
 	metadata := messageMetadata{}
 	for len(lines) > 0 {
+		first := strings.TrimSpace(lines[0])
+		if first == "" {
+			lines = lines[1:]
+			continue
+		}
+		if strings.HasPrefix(first, "Reactions: ") {
+			metadata.Reactions = splitMetadataList(strings.TrimPrefix(first, "Reactions: "))
+			lines = lines[1:]
+			continue
+		}
+		if !strings.HasPrefix(first, "Thread: ") {
+			break
+		}
+		matches := threadFooterRE.FindStringSubmatch(strings.TrimPrefix(first, "Thread: "))
+		if matches == nil {
+			break
+		}
+		metadata.ReplyCount, _ = strconv.Atoi(matches[1])
+		metadata.LatestReply = matches[2]
+		lines = lines[1:]
+	}
+	for len(lines) > 0 {
 		last := strings.TrimSpace(lines[len(lines)-1])
 		switch {
 		case last == "":
